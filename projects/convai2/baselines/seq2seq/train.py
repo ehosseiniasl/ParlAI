@@ -42,5 +42,7 @@ if __name__ == '__main__':
         validation_patience=12,
         log_every_n_secs=10,
         dict_tokenizer='split',
+        tensorboard_log=True,
+        save_every_n_sec=1800,
     )
     TrainLoop(parser).train()

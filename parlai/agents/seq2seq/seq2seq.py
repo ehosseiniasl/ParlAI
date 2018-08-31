@@ -523,7 +523,10 @@ class Seq2seqAgent(Agent):
             self.update_params()
         else:
             self.model.eval()
-            out = self.model(xs, ys=None, cands=cands, valid_cands=valid_cands, beam_size=self.beam_size, topk=self.topk)
+            if valid_cands:
+                out = self.model(xs, ys=None, cands=cands, valid_cands=valid_cands, beam_size=self.beam_size, topk=self.topk)
+            else:
+                out = self.model(xs, ys=None, cands=cands, beam_size=self.beam_size, topk=self.topk)
             predictions, cand_preds = out[0], out[2]
 
             if ys is not None:
