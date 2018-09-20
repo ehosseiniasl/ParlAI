@@ -205,7 +205,20 @@ class Transformer(nn.Module):
             "To share word embedding table, the vocabulary size of src/tgt shall be the same."
             self.encoder.src_word_emb.weight = self.decoder.tgt_word_emb.weight
 
-    def forward(self, src_seq, src_pos, tgt_seq, tgt_pos):
+    def forward(self, xs, ys, cands=None, cand_indices=None, prev_enc=None, rank_during_training=False, beam_size=1, topk=1):
+
+        nbest_beam_preds, nbest_beam_scores = None, None
+
+        bsize = xs.shape
+        src_seq = xs
+        tgt_seq = ys
+
+        # add position embedding
+        src_pos = [pos_i + 1 if w_i != 0 else 0
+         for pos_i, w_i in enumerate(src_seq)]
+
+        tgt_pos = [pos_i + 1 if w_i != 0 else 0
+                   for pos_i, w_i in enumerate(tgt_seq)]
 
         tgt_seq, tgt_pos = tgt_seq[:, :-1], tgt_pos[:, :-1]
 
@@ -213,7 +226,19 @@ class Transformer(nn.Module):
         dec_output, *_ = self.decoder(tgt_seq, tgt_pos, src_seq, enc_output)
         seq_logit = self.tgt_word_prj(dec_output) * self.x_logit_scale
 
-        return seq_logit.view(-1, seq_logit.size(2))
+        output_len = seq_logit.shape[0] // bsize
+        scores = seq_logit.max(1)[0].view(bsize, output_len)
+        predictions = seq_logit.max(1)[1].view(bsize, output_len)
+
+        cand_preds, cand_scores = None, None
+        # TODO candidate ranking
+
+
+        # ret = (predictions, scores, cand_preds, cand_scores, encoder_states, nbest_beam_preds, nbest_beam_scores)
+        ret = (predictions, scores, cand_preds)
+
+        # return seq_logit.view(-1, seq_logit.size(2))
+        return ret
 
 
 class Ranker(object):
