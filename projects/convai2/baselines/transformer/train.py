@@ -52,8 +52,8 @@ if __name__ == '__main__':
         n_head = 8,
         d_k = 64,
         d_v = 64,
-        dropout = 0.1,
+        #dropout = 0.1,
         tgt_emb_prj_weight_sharing = True,
-        emb_src_tgt_weight_sharing = True,
-    )
+        emb_src_tgt_weight_sharing = True
+        )
     TrainLoop(parser).train()

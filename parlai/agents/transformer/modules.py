@@ -13,7 +13,7 @@ import torch.nn.functional as F
 from parlai.core.torch_agent import Beam
 from parlai.core.dict import DictionaryAgent
 import os
-from transformer import Constants
+from parlai.agents.transformer import Constants
 import numpy as np
 
 def get_non_pad_mask(seq):
