@@ -60,7 +60,7 @@ class TransformerAgent(Agent):
     @staticmethod
     def add_cmdline_args(argparser):
         """Add command-line arguments specifically for this agent."""
-        agent = argparser.add_argument_group('Seq2Seq Arguments')
+        agent = argparser.add_argument_group('Transformer Arguments')
         agent.add_argument('--init-model', type=str, default=None,
                            help='load dict/features/weights/opts from this file')
         agent.add_argument('-hs', '--hiddensize', type=int, default=128,
@@ -291,7 +291,7 @@ class TransformerAgent(Agent):
                         if opt['lookuptable'] in ['unique', 'dec_out']:
                             # also set encoder lt, since it's not shared
                             self.model.encoder.lt.weight.data[i] = vec
-                print('Seq2seq: initialized embeddings for {} tokens from {}.'
+                print('Transformer: initialized embeddings for {} tokens from {}.'
                       ''.format(cnt, init))
 
             if states:
@@ -319,7 +319,7 @@ class TransformerAgent(Agent):
 
             # set up optimizer
             lr = opt['learningrate']
-            optim_class = Seq2seqAgent.OPTIM_OPTS[opt['optimizer']]
+            optim_class = Transformer.OPTIM_OPTS[opt['optimizer']]
             kwargs = {'lr': lr}
             if opt.get('momentum') > 0 and opt['optimizer'] in ['sgd', 'rmsprop']:
                 kwargs['momentum'] = opt['momentum']
@@ -330,7 +330,7 @@ class TransformerAgent(Agent):
                 kwargs['amsgrad'] = True
 
             if opt['embedding_type'].endswith('fixed'):
-                print('Seq2seq: fixing embedding weights.')
+                print('Transformer: fixing embedding weights.')
                 self.model.decoder.lt.weight.requires_grad = False
                 self.model.encoder.lt.weight.requires_grad = False
                 if opt['lookuptable'] in ['dec_out', 'all']:
@@ -693,7 +693,7 @@ class mydefaultdict(defaultdict):
         return super().get(key, default or self.default_factory())
 
 
-class PerplexityEvaluatorAgent(Seq2seqAgent):
+class PerplexityEvaluatorAgent(Transformer):
     """Subclass for doing standardized perplexity evaluation.
 
     This is designed to be used in conjunction with the PerplexityWorld at
