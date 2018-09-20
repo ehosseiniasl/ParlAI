@@ -15,6 +15,7 @@ from parlai.core.dict import DictionaryAgent
 import os
 from parlai.agents.transformer import Constants
 import numpy as np
+from .layers import EncoderLayer, DecoderLayer
 
 def get_non_pad_mask(seq):
     assert seq.dim() == 2
