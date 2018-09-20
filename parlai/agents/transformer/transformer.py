@@ -319,7 +319,7 @@ class TransformerAgent(Agent):
 
             # set up optimizer
             lr = opt['learningrate']
-            optim_class = Transformer.OPTIM_OPTS[opt['optimizer']]
+            optim_class = TransformerAgent.OPTIM_OPTS[opt['optimizer']]
             kwargs = {'lr': lr}
             if opt.get('momentum') > 0 and opt['optimizer'] in ['sgd', 'rmsprop']:
                 kwargs['momentum'] = opt['momentum']
