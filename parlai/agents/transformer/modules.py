@@ -16,6 +16,8 @@ import os
 from parlai.agents.transformer import Constants
 import numpy as np
 from .layers import EncoderLayer, DecoderLayer
+import ipdb
+
 
 def get_non_pad_mask(seq):
     assert seq.dim() == 2
@@ -222,7 +224,8 @@ class Transformer(nn.Module):
             self.encoder.src_word_emb.weight = self.decoder.tgt_word_emb.weight
 
     def forward(self, xs, ys, cands=None, cand_indices=None, prev_enc=None, rank_during_training=False, beam_size=1, topk=1):
-
+        
+        ipdb.set_trace()
         nbest_beam_preds, nbest_beam_scores = None, None
 
         bsize = xs.shape
