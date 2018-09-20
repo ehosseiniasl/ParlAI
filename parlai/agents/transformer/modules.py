@@ -233,12 +233,18 @@ class Transformer(nn.Module):
         tgt_seq = ys
 
         # add position embedding
-        src_pos = [pos_i + 1 if w_i != 0 else 0
-         for pos_i, w_i in enumerate(src_seq)]
+        src_pos = torch.tensor(src_seq.shape)
+        for i in range(src_seq.shape[0]):
+            seq = src_seq[i]
+            pos = [pos_i + 1 if w_i != 0 else 0 for pos_i, w_i in enumerate(seq)]
+            src_pos[i] = pos
 
-        tgt_pos = [pos_i + 1 if w_i != 0 else 0
-                   for pos_i, w_i in enumerate(tgt_seq)]
-
+        tgt_pos = torch.tensor(tgt_seq.shape)
+        for i in range(tgt_seq.shape[0]):
+            seq = tgt_seq[i]
+            pos = [pos_i + 1 if w_i != 0 else 0 for pos_i, w_i in enumerate(seq)]
+            tgt_pos[i] = pos
+        
         tgt_seq, tgt_pos = tgt_seq[:, :-1], tgt_pos[:, :-1]
 
         enc_output, *_ = self.encoder(src_seq, src_pos)
