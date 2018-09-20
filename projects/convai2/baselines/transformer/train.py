@@ -44,5 +44,16 @@ if __name__ == '__main__':
         dict_tokenizer='split',
         tensorboard_log=True,
         save_every_n_sec=1800,
+        max_token_seq_len=52,
+        d_word_vec=512,
+        d_model = 512,
+        d_inner = 2048,
+        n_layers = 6,
+        n_head = 8,
+        d_k = 64,
+        d_v = 64,
+        dropout = 0.1,
+        tgt_emb_prj_weight_sharing = True,
+        emb_src_tgt_weight_sharing = True,
     )
     TrainLoop(parser).train()
