@@ -172,7 +172,7 @@ class Transformer(nn.Module):
     #         n_layers=6, n_head=8, d_k=64, d_v=64, dropout=0.1,
     #         tgt_emb_prj_weight_sharing=True,
     #         emb_src_tgt_weight_sharing=True):
-    def __init__(self, n_src_vocab, opt):
+    def __init__(self, n_src_vocab, opt, longest_label=1):
 
         super().__init__()
         n_tgt_vocab = n_src_vocab
@@ -187,6 +187,7 @@ class Transformer(nn.Module):
         dropout = opt['dropout']
         tgt_emb_prj_weight_sharing = opt['tgt_emb_prj_weight_sharing']
         emb_src_tgt_weight_sharing = opt['emb_src_tgt_weight_sharing']
+        self.longest_label = longest_label
 
         self.encoder = Encoder(
             n_src_vocab=n_src_vocab, len_max_seq=len_max_seq,
