@@ -175,7 +175,7 @@ class Transformer(nn.Module):
 
         super().__init__()
         n_tgt_vocab = n_src_vocab
-        len_max_seq= opt['max_token)seq_len']
+        len_max_seq= opt['max_token_seq_len']
         d_word_vec = opt['d_word_vec']
         d_model = opt['d_model']
         d_inner = opt['d_inner']
