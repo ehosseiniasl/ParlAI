@@ -334,7 +334,8 @@ class TransformerAgent(Agent):
                 self.model.decoder.tgt_word_emb.weight.requires_grad = False
                 self.model.encoder.src_word_emb.weight.requires_grad = False
                 if opt['lookuptable'] in ['dec_out', 'all']:
-                    self.model.decoder.e2s.weight.requires_grad = False
+                    # self.model.decoder.e2s.weight.requires_grad = False
+                    self.model.tgt_word_prj.weight.requires_grad = False
             self.optimizer = optim_class([p for p in self.model.parameters() if p.requires_grad], **kwargs)
             if states.get('optimizer'):
                 if states['optimizer_type'] != opt['optimizer']:
