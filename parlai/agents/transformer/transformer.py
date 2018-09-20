@@ -331,8 +331,8 @@ class TransformerAgent(Agent):
 
             if opt['embedding_type'].endswith('fixed'):
                 print('Transformer: fixing embedding weights.')
-                self.model.decoder.lt.weight.requires_grad = False
-                self.model.encoder.lt.weight.requires_grad = False
+                self.model.decoder.tgt_word_emb.weight.requires_grad = False
+                self.model.encoder.src_word_emb.weight.requires_grad = False
                 if opt['lookuptable'] in ['dec_out', 'all']:
                     self.model.decoder.e2s.weight.requires_grad = False
             self.optimizer = optim_class([p for p in self.model.parameters() if p.requires_grad], **kwargs)
