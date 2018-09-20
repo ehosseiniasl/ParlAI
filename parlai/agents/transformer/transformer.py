@@ -617,6 +617,7 @@ class TransformerAgent(Agent):
 
         # produce predictions, train on targets if availables
         cand_inds = [i[0] for i in valid_cands] if valid_cands is not None else None
+        ipdb.set_trace()
         predictions, cand_preds = self.predict(xs, ys, cands, cand_inds, is_training)
 
         if is_training:

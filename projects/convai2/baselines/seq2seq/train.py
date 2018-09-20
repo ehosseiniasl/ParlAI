@@ -16,7 +16,8 @@ if __name__ == '__main__':
     parser.set_defaults(
         task='convai2:self',
         model='seq2seq',
-        model_file='/tmp/convai2_self_seq2seq_model',
+        #model_file='/tmp/convai2_self_seq2seq_model',
+        model_file='/tmp/convai2_test',
         dict_lower=True,
         dict_include_valid=False,
         dict_maxexs=-1,
