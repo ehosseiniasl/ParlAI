@@ -286,11 +286,11 @@ class TransformerAgent(Agent):
                 for w, i in self.dict.tok2ind.items():
                     if w in embs.stoi:
                         vec = t(embs.vectors[embs.stoi[w]])
-                        self.model.decoder.lt.weight.data[i] = vec
+                        self.model.decoder.tgt_word_emb.weight.data[i] = vec
                         cnt += 1
                         if opt['lookuptable'] in ['unique', 'dec_out']:
                             # also set encoder lt, since it's not shared
-                            self.model.encoder.lt.weight.data[i] = vec
+                            self.model.encoder.src_word_emb.weight.data[i] = vec
                 print('Transformer: initialized embeddings for {} tokens from {}.'
                       ''.format(cnt, init))
 
