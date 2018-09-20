@@ -13,6 +13,8 @@ import torch.nn.functional as F
 from parlai.core.torch_agent import Beam
 from parlai.core.dict import DictionaryAgent
 import os
+from transformer import Constants
+import numpy as np
 
 def get_non_pad_mask(seq):
     assert seq.dim() == 2
@@ -162,16 +164,28 @@ class Decoder(nn.Module):
 class Transformer(nn.Module):
     ''' A sequence to sequence model with attention mechanism. '''
 
-    def __init__(
-            self,
-            n_src_vocab, len_max_seq,
-            d_word_vec=512, d_model=512, d_inner=2048,
-            n_layers=6, n_head=8, d_k=64, d_v=64, dropout=0.1,
-            tgt_emb_prj_weight_sharing=True,
-            emb_src_tgt_weight_sharing=True):
+    # def __init__(
+    #         self,
+    #         n_src_vocab, len_max_seq,
+    #         d_word_vec=512, d_model=512, d_inner=2048,
+    #         n_layers=6, n_head=8, d_k=64, d_v=64, dropout=0.1,
+    #         tgt_emb_prj_weight_sharing=True,
+    #         emb_src_tgt_weight_sharing=True):
+    def __init__(self, n_src_vocab, opt):
 
         super().__init__()
         n_tgt_vocab = n_src_vocab
+        len_max_seq= opt['max_token)seq_len']
+        d_word_vec = opt['d_word_vec']
+        d_model = opt['d_model']
+        d_inner = opt['d_inner']
+        n_layers = opt['n_layers']
+        n_head = opt['n_head']
+        d_k = opt['d_k']
+        d_v = opt['d_v']
+        dropout = opt['dropout']
+        tgt_emb_prj_weight_sharing = opt['tgt_emb_prj_weight_sharing']
+        emb_src_tgt_weight_sharing = opt['emb_src_tgt_weight_sharing']
 
         self.encoder = Encoder(
             n_src_vocab=n_src_vocab, len_max_seq=len_max_seq,

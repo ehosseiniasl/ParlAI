@@ -9,7 +9,7 @@ from parlai.core.build_data import modelzoo_path
 from parlai.core.dict import DictionaryAgent
 from parlai.core.utils import maintain_dialog_history, PaddingUtils, round_sigfigs
 from parlai.core.thread_utils import SharedTable
-from .modules import Seq2seq
+from .modules import Transformer
 
 import torch
 from torch import optim
@@ -106,9 +106,9 @@ class TransformerAgent(Agent):
                            'input and output to have a maximum length. This '
                            'reduces the total amount '
                            'of padding in the batches.')
-        agent.add_argument('-rnn', '--rnn-class', default='lstm',
-                           choices=Seq2seq.RNN_OPTS.keys(),
-                           help='Choose between different types of RNNs.')
+        # agent.add_argument('-rnn', '--rnn-class', default='lstm',
+        #                    choices=Seq2seq.RNN_OPTS.keys(),
+        #                    help='Choose between different types of RNNs.')
         agent.add_argument('-dec', '--decoder', default='same',
                            choices=['same', 'shared'],
                            help='Choose between different decoder modules. '
@@ -127,7 +127,7 @@ class TransformerAgent(Agent):
                                 'weights. '
                                 'All shares all three weights.')
         agent.add_argument('-opt', '--optimizer', default='sgd',
-                           choices=Seq2seqAgent.OPTIM_OPTS.keys(),
+                           choices=TransformerAgent.OPTIM_OPTS.keys(),
                            help='Choose between pytorch optimizers. '
                                 'Any member of torch.optim is valid and will '
                                 'be used with default params except learning '
@@ -162,7 +162,7 @@ class TransformerAgent(Agent):
                            help='The portion of beams to dump from minibatch into model_name.beam_dump folder')
         agent.add_argument('--topk', type=int, default=1, help='Top k sampling from renormalized softmax in test/valid time, default 1 means simple greedy max output')
         agent.add_argument('--softmax-layer-bias', type='bool', default=False, help='Put True if you want to include the bias in decoder.e2s layer')
-        Seq2seqAgent.dictionary_class().add_cmdline_args(argparser)
+        TransformerAgent.dictionary_class().add_cmdline_args(argparser)
         return agent
 
     def __init__(self, opt, shared=None):
@@ -228,7 +228,7 @@ class TransformerAgent(Agent):
 
             # load dictionary and basic tokens & vectors
             self.dict = DictionaryAgent(opt)
-            self.id = 'Seq2Seq'
+            self.id = 'Transformer'
             # we use START markers to start our output
             self.START_IDX = self.dict[self.dict.start_token]
             # we use END markers to end our output
@@ -238,11 +238,13 @@ class TransformerAgent(Agent):
 
             if not hasattr(self, 'model_class'):
                 # this allows child classes to override this but inherit init
-                self.model_class = Seq2seq
+                self.model_class = Transformer
+            # self.model = self.model_class(
+            #     opt, len(self.dict), padding_idx=self.NULL_IDX,
+            #     start_idx=self.START_IDX, end_idx=self.END_IDX,
+            #     longest_label=states.get('longest_label', 1))
             self.model = self.model_class(
-                opt, len(self.dict), padding_idx=self.NULL_IDX,
-                start_idx=self.START_IDX, end_idx=self.END_IDX,
-                longest_label=states.get('longest_label', 1))
+                len(self.dict), opt)
 
             if opt.get('dict_tokenizer') == 'bpe' and opt['embedding_type'] != 'random':
                 print('skipping preinitialization of embeddings for bpe')
