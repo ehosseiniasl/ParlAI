@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-import transformer.Constants as Constants
+import parlai.agents.transformer.Constants as Constants
 
 class Beam():
     ''' Beam search '''

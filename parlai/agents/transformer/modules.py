@@ -392,7 +392,7 @@ class Transformer(nn.Module):
 
         with torch.no_grad():
             #-- Encode
-            src_seq, src_pos = src_seq.to(self.device), src_pos.to(self.device)
+            #src_seq, src_pos = src_seq.to(self.device), src_pos.to(self.device)
             src_enc, *_ = self.model.encoder(src_seq, src_pos)
 
             #-- Repeat data for beam search
