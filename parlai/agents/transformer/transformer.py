@@ -538,14 +538,27 @@ class TransformerAgent(Agent):
 
             if ys is not None:
                 # calculate loss on targets
-                out = self.model(xs, ys)
-                scores = out[1]
-                score_view = scores.view(-1, scores.size(-1))
-                loss = self.criterion(score_view, ys.view(-1))
-                # save loss to metrics
-                target_tokens = ys.ne(self.NULL_IDX).long().sum().item()
+
+                out = self.model(xs, ys, rank_during_training=cands is not None)
+                # generated response
+                _preds, scores, cand_preds, seq_logit_view = out[0], out[1], out[2], out[3]
+                gold = ys[:, 1:]
+                loss, n_correct = self.model.cal_performance(seq_logit_view, gold,
+                                                             smoothing=self.opt['label_smoothing'])
+                y_ne = gold.ne(self.NULL_IDX)
+                target_tokens = y_ne.long().sum().item()
+                correct = ((gold == _preds) * y_ne).sum().item()
                 self.metrics['loss'] += loss.item()
                 self.metrics['num_tokens'] += target_tokens
+
+                # out = self.model(xs, ys)
+                # scores = out[1]
+                # score_view = scores.view(-1, scores.size(-1))
+                # loss = self.criterion(score_view, ys.view(-1))
+                # save loss to metrics
+                # target_tokens = ys.ne(self.NULL_IDX).long().sum().item()
+                # self.metrics['loss'] += loss.item()
+                # self.metrics['num_tokens'] += target_tokens
 
         return predictions, cand_preds
 
