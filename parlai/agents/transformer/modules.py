@@ -97,6 +97,7 @@ class Encoder(nn.Module):
         slf_attn_mask = get_attn_key_pad_mask(seq_k=src_seq, seq_q=src_seq)
         non_pad_mask = get_non_pad_mask(src_seq)
 
+        
         # -- Forward
         enc_output = self.src_word_emb(src_seq) + self.position_enc(src_pos)
 
@@ -246,6 +247,10 @@ class Transformer(nn.Module):
             seq = tgt_seq[i]
             pos = [pos_i + 1 if w_i != 0 else 0 for pos_i, w_i in enumerate(seq)]
             tgt_pos[i] = torch.tensor(pos)
+        
+        if tgt_seq.device.type == 'cuda':
+            src_pos = src_pos.cuda()
+            tgt_pos = tgt_pos.cuda()
         tgt_seq, tgt_pos = tgt_seq[:, :-1], tgt_pos[:, :-1]
 
         enc_output, *_ = self.encoder(src_seq, src_pos)
@@ -323,12 +328,12 @@ class Transformer(nn.Module):
             return beamed_tensor
 
         def collate_active_info(
-                src_seq, src_enc, inst_idx_to_position_map, active_inst_idx_list):
+                src_seq, src_enc, inst_idx_to_position_map, active_inst_idx_list, device):
             # Sentences which are still active are collected,
             # so the decoder will not run on completed sentences.
             n_prev_active_inst = len(inst_idx_to_position_map)
             active_inst_idx = [inst_idx_to_position_map[k] for k in active_inst_idx_list]
-            active_inst_idx = torch.LongTensor(active_inst_idx).to(self.device)
+            active_inst_idx = torch.LongTensor(active_inst_idx).to(device)
 
             active_src_seq = collect_active_part(src_seq, active_inst_idx, n_prev_active_inst, n_bm)
             active_src_enc = collect_active_part(src_enc, active_inst_idx, n_prev_active_inst, n_bm)
@@ -337,24 +342,24 @@ class Transformer(nn.Module):
             return active_src_seq, active_src_enc, active_inst_idx_to_position_map
 
         def beam_decode_step(
-                inst_dec_beams, len_dec_seq, src_seq, enc_output, inst_idx_to_position_map, n_bm):
+                inst_dec_beams, len_dec_seq, src_seq, enc_output, inst_idx_to_position_map, n_bm, device):
             ''' Decode and update beam status, and then return active beam idx '''
 
-            def prepare_beam_dec_seq(inst_dec_beams, len_dec_seq):
+            def prepare_beam_dec_seq(inst_dec_beams, len_dec_seq, device):
                 dec_partial_seq = [b.get_current_state() for b in inst_dec_beams if not b.done]
-                dec_partial_seq = torch.stack(dec_partial_seq).to(self.device)
+                dec_partial_seq = torch.stack(dec_partial_seq).to(device)
                 dec_partial_seq = dec_partial_seq.view(-1, len_dec_seq)
                 return dec_partial_seq
 
-            def prepare_beam_dec_pos(len_dec_seq, n_active_inst, n_bm):
-                dec_partial_pos = torch.arange(1, len_dec_seq + 1, dtype=torch.long, device=self.device)
+            def prepare_beam_dec_pos(len_dec_seq, n_active_inst, n_bm, device):
+                dec_partial_pos = torch.arange(1, len_dec_seq + 1, dtype=torch.long, device=device)
                 dec_partial_pos = dec_partial_pos.unsqueeze(0).repeat(n_active_inst * n_bm, 1)
                 return dec_partial_pos
 
             def predict_word(dec_seq, dec_pos, src_seq, enc_output, n_active_inst, n_bm):
-                dec_output, *_ = self.model.decoder(dec_seq, dec_pos, src_seq, enc_output)
+                dec_output, *_ = self.decoder(dec_seq, dec_pos, src_seq, enc_output)
                 dec_output = dec_output[:, -1, :]  # Pick the last step: (bh * bm) * d_h
-                word_prob = F.log_softmax(self.model.tgt_word_prj(dec_output), dim=1)
+                word_prob = F.log_softmax(self.tgt_word_prj(dec_output), dim=1)
                 word_prob = word_prob.view(n_active_inst, n_bm, -1)
 
                 return word_prob
@@ -370,8 +375,8 @@ class Transformer(nn.Module):
 
             n_active_inst = len(inst_idx_to_position_map)
 
-            dec_seq = prepare_beam_dec_seq(inst_dec_beams, len_dec_seq)
-            dec_pos = prepare_beam_dec_pos(len_dec_seq, n_active_inst, n_bm)
+            dec_seq = prepare_beam_dec_seq(inst_dec_beams, len_dec_seq, device)
+            dec_pos = prepare_beam_dec_pos(len_dec_seq, n_active_inst, n_bm, device)
             word_prob = predict_word(dec_seq, dec_pos, src_seq, enc_output, n_active_inst, n_bm)
 
             # Update the beam with predicted word prob information and collect incomplete instances
@@ -393,16 +398,17 @@ class Transformer(nn.Module):
         with torch.no_grad():
             #-- Encode
             #src_seq, src_pos = src_seq.to(self.device), src_pos.to(self.device)
-            src_enc, *_ = self.model.encoder(src_seq, src_pos)
-
+            src_enc, *_ = self.encoder(src_seq, src_pos)
+            
+            device = src_seq.device.type
             #-- Repeat data for beam search
-            n_bm = self.opt.beam_size
+            n_bm = self.opt['beam_size']
             n_inst, len_s, d_h = src_enc.size()
             src_seq = src_seq.repeat(1, n_bm).view(n_inst * n_bm, len_s)
             src_enc = src_enc.repeat(1, n_bm, 1).view(n_inst * n_bm, len_s, d_h)
-
+            
             #-- Prepare beams
-            inst_dec_beams = [Beam(n_bm, device=self.device) for _ in range(n_inst)]
+            inst_dec_beams = [Beam(n_bm, device=src_seq.device.type) for _ in range(n_inst)]
 
             #-- Bookkeeping for active or not
             active_inst_idx_list = list(range(n_inst))
@@ -412,15 +418,16 @@ class Transformer(nn.Module):
             for len_dec_seq in range(1, self.opt['max_token_seq_len'] + 1):
 
                 active_inst_idx_list = beam_decode_step(
-                    inst_dec_beams, len_dec_seq, src_seq, src_enc, inst_idx_to_position_map, n_bm)
+                    inst_dec_beams, len_dec_seq, src_seq, src_enc, inst_idx_to_position_map, n_bm, device)
 
                 if not active_inst_idx_list:
                     break  # all instances have finished their path to <EOS>
 
                 src_seq, src_enc, inst_idx_to_position_map = collate_active_info(
-                    src_seq, src_enc, inst_idx_to_position_map, active_inst_idx_list)
-
-        batch_hyp, batch_scores = collect_hypothesis_and_scores(inst_dec_beams, self.opt.n_best)
+                    src_seq, src_enc, inst_idx_to_position_map, active_inst_idx_list, device)
+        
+        n_best = 1
+        batch_hyp, batch_scores = collect_hypothesis_and_scores(inst_dec_beams, n_best)
 
         return batch_hyp, batch_scores
 
@@ -433,6 +440,9 @@ class Transformer(nn.Module):
             pos = [pos_i + 1 if w_i != 0 else 0 for pos_i, w_i in enumerate(seq)]
             src_pos[i] = torch.tensor(pos)
 
+        if src_seq.device.type == 'cuda':
+            src_pos = src_pos.cuda()
+        
         out = self.translate_batch(src_seq, src_pos)
         return out
 

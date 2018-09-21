@@ -527,7 +527,6 @@ class TransformerAgent(Agent):
                     raise e
             self.update_params()
         else:
-            ipdb.set_trace()
             self.model.eval()
             #TODO validate candidates
             # if valid_cands:
@@ -536,6 +535,7 @@ class TransformerAgent(Agent):
             #     out = self.model(xs, ys=None, cands=cands, beam_size=self.beam_size, topk=self.topk)
             out = self.model.evaluate(xs)
             predictions, cand_preds = out[0], out[2]
+            ipdb.set_trace()
 
             if ys is not None:
                 # calculate loss on targets
