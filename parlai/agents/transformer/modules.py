@@ -409,7 +409,7 @@ class Transformer(nn.Module):
             inst_idx_to_position_map = get_inst_idx_to_tensor_position_map(active_inst_idx_list)
 
             #-- Decode
-            for len_dec_seq in range(1, self.model_opt.max_token_seq_len + 1):
+            for len_dec_seq in range(1, self.opt['max_token_seq_len'] + 1):
 
                 active_inst_idx_list = beam_decode_step(
                     inst_dec_beams, len_dec_seq, src_seq, src_enc, inst_idx_to_position_map, n_bm)
