@@ -261,10 +261,46 @@ class Transformer(nn.Module):
 
 
         # ret = (predictions, scores, cand_preds, cand_scores, encoder_states, nbest_beam_preds, nbest_beam_scores)
-        ret = (predictions, scores, cand_preds)
+        ret = (predictions, scores, cand_preds, seq_logit.view(-1, seq_logit.size(2)))
 
         # return seq_logit.view(-1, seq_logit.size(2))
         return ret
+
+    def cal_loss(self, pred, gold, smoothing):
+        ''' Calculate cross entropy loss, apply label smoothing if needed. '''
+
+        gold = gold.contiguous().view(-1)
+
+        if smoothing:
+            eps = 0.1
+            n_class = pred.size(1)
+
+            one_hot = torch.zeros_like(pred).scatter(1, gold.view(-1, 1), 1)
+            one_hot = one_hot * (1 - eps) + (1 - one_hot) * eps / (n_class - 1)
+            log_prb = F.log_softmax(pred, dim=1)
+
+            non_pad_mask = gold.ne(Constants.PAD)
+            loss = -(one_hot * log_prb).sum(dim=1)
+            loss = loss.masked_select(non_pad_mask).sum()  # average later
+        else:
+            loss = F.cross_entropy(pred, gold, ignore_index=Constants.PAD, reduction='sum')
+
+        return loss
+
+    def cal_performance(self, pred, gold, smoothing=False):
+        ''' Apply label smoothing if needed '''
+
+        loss = self.cal_loss(pred, gold, smoothing)
+
+        pred = pred.max(1)[1]
+        gold = gold.contiguous().view(-1)
+        non_pad_mask = gold.ne(Constants.PAD)
+        n_correct = pred.eq(gold)
+        n_correct = n_correct.masked_select(non_pad_mask).sum().item()
+
+        return loss, n_correct
+
+
 
 
 class Ranker(object):

@@ -500,10 +500,12 @@ class TransformerAgent(Agent):
             try:
                 out = self.model(xs, ys, rank_during_training=cands is not None)
                 # generated response
-                _preds, scores, cand_preds = out[0], out[1], out[2]
+                _preds, scores, cand_preds, seq_logit_view = out[0], out[1], out[2], out[3]
+                gold = ys[:, 1:]
+                loss, n_correct = self.model.cal_performance(seq_logit_view, gold)
 
-                score_view = scores.view(-1, scores.size(-1))
-                loss = self.criterion(score_view, ys.view(-1))
+                # score_view = scores.view(-1, scores.size(-1))
+                # loss = self.criterion(score_view, ys.view(-1))
                 # save loss to metrics
                 y_ne = ys.ne(self.NULL_IDX)
                 target_tokens = y_ne.long().sum().item()
