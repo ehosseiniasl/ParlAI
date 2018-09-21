@@ -44,7 +44,7 @@ if __name__ == '__main__':
         dict_tokenizer='split',
         tensorboard_log=True,
         save_every_n_sec=1800,
-        max_token_seq_len=52,
+        max_token_seq_len=100,
         d_word_vec=256,
         d_model = 256,
         d_inner = 2048,
