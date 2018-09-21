@@ -527,6 +527,7 @@ class TransformerAgent(Agent):
                     raise e
             self.update_params()
         else:
+            ipdb.set_trace()
             self.model.eval()
             #TODO validate candidates
             # if valid_cands:
