@@ -1,4 +1,5 @@
 ''' Define the Layers '''
+import torch
 import torch.nn as nn
 from .SubLayers import MultiHeadAttention, PositionwiseFeedForward
 

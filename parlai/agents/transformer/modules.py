@@ -88,7 +88,7 @@ class Encoder(nn.Module):
             for _ in range(n_layers)])
 
     def forward(self, src_seq, src_pos, return_attns=False):
-
+        
         enc_slf_attn_list = []
 
         # -- Prepare masks
@@ -225,35 +225,36 @@ class Transformer(nn.Module):
 
     def forward(self, xs, ys, cands=None, cand_indices=None, prev_enc=None, rank_during_training=False, beam_size=1, topk=1):
         
-        ipdb.set_trace()
         nbest_beam_preds, nbest_beam_scores = None, None
 
-        bsize = xs.shape
+        bsize = xs.shape[0]
         src_seq = xs
         tgt_seq = ys
 
         # add position embedding
-        src_pos = torch.tensor(src_seq.shape)
+        src_pos = torch.zeros(src_seq.shape, dtype=torch.int64)
         for i in range(src_seq.shape[0]):
             seq = src_seq[i]
             pos = [pos_i + 1 if w_i != 0 else 0 for pos_i, w_i in enumerate(seq)]
-            src_pos[i] = pos
+            src_pos[i] = torch.tensor(pos)
 
-        tgt_pos = torch.tensor(tgt_seq.shape)
+        tgt_pos = torch.zeros(tgt_seq.shape, dtype=torch.int64)
         for i in range(tgt_seq.shape[0]):
             seq = tgt_seq[i]
             pos = [pos_i + 1 if w_i != 0 else 0 for pos_i, w_i in enumerate(seq)]
-            tgt_pos[i] = pos
-        
+            tgt_pos[i] = torch.tensor(pos)
+        ipdb.set_trace()
         tgt_seq, tgt_pos = tgt_seq[:, :-1], tgt_pos[:, :-1]
 
         enc_output, *_ = self.encoder(src_seq, src_pos)
         dec_output, *_ = self.decoder(tgt_seq, tgt_pos, src_seq, enc_output)
         seq_logit = self.tgt_word_prj(dec_output) * self.x_logit_scale
 
-        output_len = seq_logit.shape[0] // bsize
-        scores = seq_logit.max(1)[0].view(bsize, output_len)
-        predictions = seq_logit.max(1)[1].view(bsize, output_len)
+        #output_len = seq_logit.shape[0] // bsize
+        #scores = seq_logit.max(1)[0].view(bsize, output_len)
+        #predictions = seq_logit.max(1)[1].view(bsize, output_len)
+        scores = seq_logit.max(2)[0]
+        predictions = seq_logit.max(2)[1]
 
         cand_preds, cand_scores = None, None
         # TODO candidate ranking
