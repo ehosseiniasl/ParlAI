@@ -502,7 +502,7 @@ class TransformerAgent(Agent):
                 # generated response
                 _preds, scores, cand_preds, seq_logit_view = out[0], out[1], out[2], out[3]
                 gold = ys[:, 1:]
-                loss, n_correct = self.model.cal_performance(seq_logit_view, gold)
+                loss, n_correct = self.model.cal_performance(seq_logit_view, gold, smoothing=self.opt['label_smoothing'])
 
                 # score_view = scores.view(-1, scores.size(-1))
                 # loss = self.criterion(score_view, ys.view(-1))
