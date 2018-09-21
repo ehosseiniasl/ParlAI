@@ -503,13 +503,13 @@ class TransformerAgent(Agent):
                 _preds, scores, cand_preds, seq_logit_view = out[0], out[1], out[2], out[3]
                 gold = ys[:, 1:]
                 loss, n_correct = self.model.cal_performance(seq_logit_view, gold, smoothing=self.opt['label_smoothing'])
-
+                
                 # score_view = scores.view(-1, scores.size(-1))
                 # loss = self.criterion(score_view, ys.view(-1))
                 # save loss to metrics
-                y_ne = ys.ne(self.NULL_IDX)
+                y_ne = gold.ne(self.NULL_IDX)
                 target_tokens = y_ne.long().sum().item()
-                correct = ((ys == _preds) * y_ne).sum().item()
+                correct = ((gold == _preds) * y_ne).sum().item()
                 self.metrics['correct_tokens'] += correct
                 self.metrics['loss'] += loss.item()
                 self.metrics['num_tokens'] += target_tokens
@@ -622,7 +622,6 @@ class TransformerAgent(Agent):
 
         # produce predictions, train on targets if availables
         cand_inds = [i[0] for i in valid_cands] if valid_cands is not None else None
-        ipdb.set_trace()
         predictions, cand_preds = self.predict(xs, ys, cands, cand_inds, is_training)
 
         if is_training:

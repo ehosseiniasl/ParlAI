@@ -243,7 +243,6 @@ class Transformer(nn.Module):
             seq = tgt_seq[i]
             pos = [pos_i + 1 if w_i != 0 else 0 for pos_i, w_i in enumerate(seq)]
             tgt_pos[i] = torch.tensor(pos)
-        ipdb.set_trace()
         tgt_seq, tgt_pos = tgt_seq[:, :-1], tgt_pos[:, :-1]
 
         enc_output, *_ = self.encoder(src_seq, src_pos)
