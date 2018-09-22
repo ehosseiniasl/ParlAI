@@ -534,7 +534,8 @@ class TransformerAgent(Agent):
             # else:
             #     out = self.model(xs, ys=None, cands=cands, beam_size=self.beam_size, topk=self.topk)
             out = self.model.evaluate(xs)
-            predictions, cand_preds = out[0], out[2]
+            # predictions, cand_preds = out[0], out[2]
+            predictions, cand_preds = out
             ipdb.set_trace()
 
             if ys is not None:
@@ -608,8 +609,14 @@ class TransformerAgent(Agent):
                 bsz = self.opt.get('batchsize', batchsize)
                 maxlen = self.truncate or 180
                 dummy = torch.ones(bsz, maxlen).long().cuda()
-                sc = self.model(dummy, dummy)[1]
-                loss = self.criterion(sc.view(-1, sc.size(-1)), dummy.view(-1))
+
+                # sc = self.model(dummy, dummy)[1]
+                # loss = self.criterion(sc.view(-1, sc.size(-1)), dummy.view(-1))
+                out = self.model(dummy, dummy)
+                _preds, scores, cand_preds, seq_logit_view = out[0], out[1], out[2], out[3]
+                gold = dummy[:, 1:]
+                loss, n_correct = self.model.cal_performance(seq_logit_view, gold,
+                                                             smoothing=self.opt['label_smoothing'])
                 loss.backward()
                 self.buffer_initialized = True
             except RuntimeError as e:
