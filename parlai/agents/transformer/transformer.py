@@ -537,7 +537,9 @@ class TransformerAgent(Agent):
             # predictions, cand_preds = out[0], out[2]
             predictions, cand_preds = out
             ipdb.set_trace()
-
+            pred_arr = [torch.tensor(p) for p in predictions]
+            predicted = torch.stack(pred_arr)
+            
             if ys is not None:
                 # calculate loss on targets
 
