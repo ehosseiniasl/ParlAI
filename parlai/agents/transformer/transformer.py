@@ -547,6 +547,8 @@ class TransformerAgent(Agent):
                 out = self.model(xs, ys, rank_during_training=cands is not None)
                 # generated response
                 _preds, scores, cand_preds, seq_logit_view = out[0], out[1], out[2], out[3]
+                predictions = _preds
+                cand_preds = None
                 gold = ys[:, 1:]
                 loss, n_correct = self.model.cal_performance(seq_logit_view, gold,
                                                              smoothing=self.opt['label_smoothing'])
