@@ -533,14 +533,15 @@ class TransformerAgent(Agent):
             #     out = self.model(xs, ys=None, cands=cands, valid_cands=valid_cands, beam_size=self.beam_size, topk=self.topk)
             # else:
             #     out = self.model(xs, ys=None, cands=cands, beam_size=self.beam_size, topk=self.topk)
-            out = self.model.evaluate(xs)
-            # predictions, cand_preds = out[0], out[2]
-            predictions, cand_preds = out
-            ipdb.set_trace()
-            pred_arr = [torch.tensor(p) for p in predictions]
-            predicted = torch.stack(pred_arr)
+            if ys is None:
+                out = self.model.evaluate(xs)
+                # predictions, cand_preds = out[0], out[2]
+                predicted, scores = out
+                cand_preds = None
+                pred_arr = [torch.tensor(p[0]) for p in predicted]
+                predictions = torch.stack(pred_arr)
             
-            if ys is not None:
+            else:
                 # calculate loss on targets
 
                 out = self.model(xs, ys, rank_during_training=cands is not None)
