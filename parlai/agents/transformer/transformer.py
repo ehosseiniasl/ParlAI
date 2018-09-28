@@ -168,8 +168,8 @@ class TransformerAgent(Agent):
     def __init__(self, opt, shared=None):
         """Set up model."""
         super().__init__(opt, shared)
-        opt = self.opt  # there is a deepcopy in the init
-
+        #opt = self.opt  # there is a deepcopy in the init
+        self.opt = opt
         # all instances may need some params
         self.truncate = opt['truncate'] if opt['truncate'] > 0 else None
         self.metrics = {'loss': 0.0, 'num_tokens': 0, 'correct_tokens': 0, 'total_skipped_batches': 0}
@@ -501,7 +501,7 @@ class TransformerAgent(Agent):
                 out = self.model(xs, ys, rank_during_training=cands is not None)
                 # generated response
                 _preds, scores, cand_preds, seq_logit_view = out[0], out[1], out[2], out[3]
-                gold = ys[:, 1:]
+                gold = ys[:, :-1]
                 loss, n_correct = self.model.cal_performance(seq_logit_view, gold, smoothing=self.opt['label_smoothing'])
                 
                 # score_view = scores.view(-1, scores.size(-1))
