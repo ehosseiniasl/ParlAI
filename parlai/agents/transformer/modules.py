@@ -241,20 +241,28 @@ class Transformer(nn.Module):
             seq = src_seq[i]
             pos = [pos_i + 1 if w_i != 0 else 0 for pos_i, w_i in enumerate(seq)]
             src_pos[i] = torch.tensor(pos)
-
-        tgt_pos = torch.zeros(tgt_seq.shape, dtype=torch.int64)
+        
+        shifted_tgt_seq = torch.zeros((bsize, tgt_seq.shape[1]+1), dtype=tgt_seq.dtype)
+        if tgt_seq.device.type == 'cuda':
+            shifted_tgt_seq = shifted_tgt_seq.cuda()
         for i in range(tgt_seq.shape[0]):
-            seq = tgt_seq[i]
+            shifted_tgt_seq[i, 0] = Constants.BOS
+            shifted_tgt_seq[i, 1:] = tgt_seq[i]
+
+        tgt_pos = torch.zeros(shifted_tgt_seq.shape, dtype=torch.int64)
+        for i in range(shifted_tgt_seq.shape[0]):
+            seq = shifted_tgt_seq[i]
             pos = [pos_i + 1 if w_i != 0 else 0 for pos_i, w_i in enumerate(seq)]
             tgt_pos[i] = torch.tensor(pos)
         
         if tgt_seq.device.type == 'cuda':
             src_pos = src_pos.cuda()
             tgt_pos = tgt_pos.cuda()
-        tgt_seq, tgt_pos = tgt_seq[:, :-1], tgt_pos[:, :-1]
-
+        #tgt_seq, tgt_pos = tgt_seq[:, :-1], tgt_pos[:, :-1]
+        shifted_tgt_seq, tgt_pos = shifted_tgt_seq[:, :-1], tgt_pos[:, :-1]
+        
         enc_output, *_ = self.encoder(src_seq, src_pos)
-        dec_output, *_ = self.decoder(tgt_seq, tgt_pos, src_seq, enc_output)
+        dec_output, *_ = self.decoder(shifted_tgt_seq, tgt_pos, src_seq, enc_output)
         seq_logit = self.tgt_word_prj(dec_output) * self.x_logit_scale
 
         #output_len = seq_logit.shape[0] // bsize

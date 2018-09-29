@@ -501,7 +501,8 @@ class TransformerAgent(Agent):
                 out = self.model(xs, ys, rank_during_training=cands is not None)
                 # generated response
                 _preds, scores, cand_preds, seq_logit_view = out[0], out[1], out[2], out[3]
-                gold = ys[:, :-1]
+                #gold = ys[:, 1:]
+                gold = ys
                 loss, n_correct = self.model.cal_performance(seq_logit_view, gold, smoothing=self.opt['label_smoothing'])
                 
                 # score_view = scores.view(-1, scores.size(-1))
@@ -549,7 +550,8 @@ class TransformerAgent(Agent):
                 _preds, scores, cand_preds, seq_logit_view = out[0], out[1], out[2], out[3]
                 predictions = _preds
                 cand_preds = None
-                gold = ys[:, 1:]
+                #gold = ys[:, 1:]
+                gold = ys
                 loss, n_correct = self.model.cal_performance(seq_logit_view, gold,
                                                              smoothing=self.opt['label_smoothing'])
                 y_ne = gold.ne(self.NULL_IDX)
@@ -619,7 +621,8 @@ class TransformerAgent(Agent):
                 # loss = self.criterion(sc.view(-1, sc.size(-1)), dummy.view(-1))
                 out = self.model(dummy, dummy)
                 _preds, scores, cand_preds, seq_logit_view = out[0], out[1], out[2], out[3]
-                gold = dummy[:, 1:]
+                #gold = dummy[:, 1:]
+                gold = dummy
                 loss, n_correct = self.model.cal_performance(seq_logit_view, gold,
                                                              smoothing=self.opt['label_smoothing'])
                 loss.backward()
