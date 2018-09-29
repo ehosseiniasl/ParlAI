@@ -162,6 +162,12 @@ class TransformerAgent(Agent):
                            help='The portion of beams to dump from minibatch into model_name.beam_dump folder')
         agent.add_argument('--topk', type=int, default=1, help='Top k sampling from renormalized softmax in test/valid time, default 1 means simple greedy max output')
         agent.add_argument('--softmax-layer-bias', type='bool', default=False, help='Put True if you want to include the bias in decoder.e2s layer')
+        agent.add_argument('--n_heads', type=int, default=2, help='number of multihead self attention')
+        agent.add_argument('--d_k', type=int, default=64, help='key dimension size')
+        agent.add_argument('--d_v', type=int, default=64, help='value dimension size')
+        agent.add_argument('--tgt_wieght_share', action='store_true', help='share weight of target projection layer')
+        agent.add_argument('--src_wieght_share', action='store_true', help='share weight of source projection layer')
+        agent.add_argument('--label_smoothin', action='store_true', help='label smoothing')
         TransformerAgent.dictionary_class().add_cmdline_args(argparser)
         return agent
 
