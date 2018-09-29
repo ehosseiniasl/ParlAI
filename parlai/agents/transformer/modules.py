@@ -186,7 +186,7 @@ class Transformer(nn.Module):
         d_word_vec = opt['d_word_vec']
         d_model = opt['d_model']
         d_inner = opt['d_inner']
-        n_layers = opt['n_layers']
+        n_layers = opt['numlayers']
         n_head = opt['n_head']
         d_k = opt['d_k']
         d_v = opt['d_v']
@@ -292,7 +292,12 @@ class Transformer(nn.Module):
             one_hot = torch.zeros_like(pred).scatter(1, gold.view(-1, 1), 1)
             one_hot = one_hot * (1 - eps) + (1 - one_hot) * eps / (n_class - 1)
             log_prb = F.log_softmax(pred, dim=1)
-            non_pad_mask = gold.ne(Constants.PAD)
+            try:
+                non_pad_mask = gold.ne(Constants.PAD)
+            except:
+                ipdb.set_trace()
+            if 1 not in non_pad_mask:
+               ipdb.set_trace()
             loss = -(one_hot * log_prb).sum(dim=1)
             loss = loss.masked_select(non_pad_mask).sum()  # average later
         else:
