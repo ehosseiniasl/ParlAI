@@ -8,7 +8,7 @@ DV=256
 D_MODEL=256
 D_INNER=1024
 D_WORD=256
-EXPERIMENT=convai2_transformer_l${LAYER}_h${HEAD}
+EXPERIMENT=convai2_transformer_[l=${LAYER},h=${HEAD},dw=${D_WORD},dm=${D_MODEL},di=${D_INNER},dk=${DK},dv=${DV}]
 MODEL_FILE=$CHECKPOINT/$EXPERIMENT
 TAG=model,numlayers,n_head,d_word_vec,d_model,d_inner,d_k,d_v
 
