@@ -51,8 +51,5 @@ if __name__ == '__main__':
         n_head = 2,
         d_k = 64,
         d_v = 64,
-        tgt_prj_weight_sharing = True,
-        src_tgt_weight_sharing = True,
-        label_smoothing=True
         )
     TrainLoop(parser).train()
