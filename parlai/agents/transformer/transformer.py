@@ -169,9 +169,9 @@ class TransformerAgent(Agent):
         agent.add_argument('--d_k', type=int, default=64, help='key dimension size')
         agent.add_argument('--d_v', type=int, default=64, help='value dimension size')
         agent.add_argument('--max_token_seq_len', type=int, default=100, help='len of max sequence')
-        agent.add_argument('--tgt_prj_weight_share', default=True, type=bool, help='share weight of target projection layer')
-        agent.add_argument('--src_tgt_weight_share', default=True, type=bool, help='share weight of source projection layer')
-        agent.add_argument('--label_smoothing', default=True, type=bool, help='label smoothing')
+        agent.add_argument('--tgt_prj_weight_share', default=False, type=bool, help='share weight of target projection layer')
+        agent.add_argument('--src_tgt_weight_share', default=False, type=bool, help='share weight of source projection layer')
+        agent.add_argument('--label_smoothing', default=False, type=bool, help='label smoothing')
         TransformerAgent.dictionary_class().add_cmdline_args(argparser)
         return agent
 
@@ -181,6 +181,9 @@ class TransformerAgent(Agent):
         opt = self.opt  # there is a deepcopy in the init
         #self.opt = opt
         # all instances may need some params
+        opt['label_smoothing'] = False
+        opt['src_tgt_weight_share'] = False
+        opt['tgt_prj_weight_share'] = False
         self.truncate = opt['truncate'] if opt['truncate'] > 0 else None
         self.metrics = {'loss': 0.0, 'num_tokens': 0, 'correct_tokens': 0, 'total_skipped_batches': 0}
         self.history = {}
