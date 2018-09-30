@@ -191,8 +191,8 @@ class Transformer(nn.Module):
         d_k = opt['d_k']
         d_v = opt['d_v']
         dropout = opt['dropout']
-        tgt_emb_prj_weight_sharing = opt['tgt_prj_weight_sharing']
-        emb_src_tgt_weight_sharing = opt['src_tgt_weight_sharing']
+        tgt_emb_prj_weight_sharing = opt['tgt_prj_weight_share']
+        emb_src_tgt_weight_sharing = opt['src_tgt_weight_share']
         self.longest_label = longest_label
 
         self.encoder = Encoder(
