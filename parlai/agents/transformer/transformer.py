@@ -170,7 +170,7 @@ class TransformerAgent(Agent):
         agent.add_argument('--d_v', type=int, default=64, help='value dimension size')
         agent.add_argument('--tgt_prj_weight_share', default=True, type=bool, help='share weight of target projection layer')
         agent.add_argument('--src_tgt_weight_share', default=True, type=bool, help='share weight of source projection layer')
-        agent.add_argument('--label_smoothing', action='store_true', help='label smoothing')
+        agent.add_argument('--label_smoothing', action=True, type=bool, help='label smoothing')
         agent.add_argument('--max_token_seq_len', type=int, default=100, help='len of max sequence')
         TransformerAgent.dictionary_class().add_cmdline_args(argparser)
         return agent
