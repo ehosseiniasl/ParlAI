@@ -25,7 +25,7 @@ if __name__ == '__main__':
         hiddensize=1024,
         embeddingsize=256,
         attention='general',
-        numlayers=6,
+        numlayers=2,
         rnn_class='lstm',
         learningrate=3,
         dropout=0.1,
