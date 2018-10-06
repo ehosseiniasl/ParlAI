@@ -545,45 +545,50 @@ class TransformerAgent(Agent):
         else:
             self.model.eval()
             #TODO validate candidates
-            # if valid_cands:
-            #     out = self.model(xs, ys=None, cands=cands, valid_cands=valid_cands, beam_size=self.beam_size, topk=self.topk)
-            # else:
-            #     out = self.model(xs, ys=None, cands=cands, beam_size=self.beam_size, topk=self.topk)
+
             #ipdb.set_trace()
-            if ys is None:
-                out = self.model.evaluate(xs)
-                # predictions, cand_preds = out[0], out[2]
-                scores = out
-                cand_preds = None
-                pred_arr = [torch.tensor(p[0]) for p in predicted]
-                predictions = torch.stack(pred_arr)
-            
-            else:
-                # calculate loss on targets
 
-                out = self.model(xs, ys, rank_during_training=cands is not None)
-                # generated response
-                _preds, scores, cand_preds, seq_logit_view = out[0], out[1], out[2], out[3]
-                predictions = _preds
-                cand_preds = None
-                #gold = ys[:, 1:]
-                gold = ys
-                loss, n_correct = self.model.cal_performance(seq_logit_view, gold,
-                                                             smoothing=self.opt['label_smoothing'])
-                y_ne = gold.ne(self.NULL_IDX)
-                target_tokens = y_ne.long().sum().item()
-                correct = ((gold == _preds) * y_ne).sum().item()
-                self.metrics['loss'] += loss.item()
-                self.metrics['num_tokens'] += target_tokens
+            out = self.model.evaluate(xs)
+            # generated response
+            _preds, scores, cand_preds, seq_logit_view = out[0], out[1], out[2], out[3]
+            predictions = _preds
+            cand_preds = None
+            # gold = ys[:, 1:]
+            gold = ys
+            loss, n_correct = self.model.cal_performance(seq_logit_view, gold,
+                                                         smoothing=self.opt['label_smoothing'])
+            y_ne = gold.ne(self.NULL_IDX)
+            target_tokens = y_ne.long().sum().item()
+            correct = ((gold == _preds) * y_ne).sum().item()
+            self.metrics['loss'] += loss.item()
+            self.metrics['num_tokens'] += target_tokens
 
-                # out = self.model(xs, ys)
-                # scores = out[1]
-                # score_view = scores.view(-1, scores.size(-1))
-                # loss = self.criterion(score_view, ys.view(-1))
-                # save loss to metrics
-                # target_tokens = ys.ne(self.NULL_IDX).long().sum().item()
-                # self.metrics['loss'] += loss.item()
-                # self.metrics['num_tokens'] += target_tokens
+            # if ys is None:
+            #     out = self.model.evaluate(xs)
+            #     # predictions, cand_preds = out[0], out[2]
+            #     scores = out
+            #     cand_preds = None
+            #     pred_arr = [torch.tensor(p[0]) for p in predicted]
+            #     predictions = torch.stack(pred_arr)
+            #
+            # else:
+            #     # calculate loss on targets
+            #
+            #     out = self.model(xs, ys, rank_during_training=cands is not None)
+            #     # generated response
+            #     _preds, scores, cand_preds, seq_logit_view = out[0], out[1], out[2], out[3]
+            #     predictions = _preds
+            #     cand_preds = None
+            #     #gold = ys[:, 1:]
+            #     gold = ys
+            #     loss, n_correct = self.model.cal_performance(seq_logit_view, gold,
+            #                                                  smoothing=self.opt['label_smoothing'])
+            #     y_ne = gold.ne(self.NULL_IDX)
+            #     target_tokens = y_ne.long().sum().item()
+            #     correct = ((gold == _preds) * y_ne).sum().item()
+            #     self.metrics['loss'] += loss.item()
+            #     self.metrics['num_tokens'] += target_tokens
+
 
         return predictions, cand_preds
 

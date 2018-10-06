@@ -446,9 +446,17 @@ class Transformer(nn.Module):
         
         #n_best = 1
         #batch_hyp, batch_scores = collect_hypothesis_and_scores(inst_dec_beams, n_best)
-
         #return batch_hyp, batch_scores
-        return word_probs_list
+
+        seq_logit = torch.stack(word_probs_list, dim=1)
+        scores = seq_logit.max(2)[0]
+        predictions = seq_logit.max(2)[1]
+
+        cand_preds, cand_scores = None, None
+        # TODO candidate ranking
+
+        ret = (predictions, scores, cand_preds, seq_logit.view(-1, seq_logit.size(2)))
+        return ret
 
     def evaluate(self, src_seq):
 
