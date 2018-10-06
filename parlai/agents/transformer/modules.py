@@ -371,10 +371,12 @@ class Transformer(nn.Module):
             def predict_word(dec_seq, dec_pos, src_seq, enc_output, n_active_inst, n_bm):
                 dec_output, *_ = self.decoder(dec_seq, dec_pos, src_seq, enc_output)
                 dec_output = dec_output[:, -1, :]  # Pick the last step: (bh * bm) * d_h
+                #ipdb.set_trace()
                 word_prob = F.log_softmax(self.tgt_word_prj(dec_output), dim=1)
+                word_prob_raw = F.softmax(self.tgt_word_prj(dec_output), dim=1)
                 word_prob = word_prob.view(n_active_inst, n_bm, -1)
 
-                return word_prob
+                return word_prob, word_prob_raw
 
             def collect_active_inst_idx_list(inst_beams, word_prob, inst_idx_to_position_map):
                 active_inst_idx_list = []
@@ -383,19 +385,20 @@ class Transformer(nn.Module):
                     if not is_inst_complete:
                         active_inst_idx_list += [inst_idx]
 
-                return active_inst_idx_list, word_prob
+                return active_inst_idx_list
 
             n_active_inst = len(inst_idx_to_position_map)
 
             dec_seq = prepare_beam_dec_seq(inst_dec_beams, len_dec_seq, device)
             dec_pos = prepare_beam_dec_pos(len_dec_seq, n_active_inst, n_bm, device)
-            word_prob = predict_word(dec_seq, dec_pos, src_seq, enc_output, n_active_inst, n_bm)
+            #ipdb.set_trace()
+            word_prob, word_prob_raw = predict_word(dec_seq, dec_pos, src_seq, enc_output, n_active_inst, n_bm)
 
             # Update the beam with predicted word prob information and collect incomplete instances
             active_inst_idx_list = collect_active_inst_idx_list(
                 inst_dec_beams, word_prob, inst_idx_to_position_map)
 
-            return active_inst_idx_list
+            return active_inst_idx_list, word_prob_raw
 
         def collect_hypothesis_and_scores(inst_dec_beams, n_best):
             all_hyp, all_scores = [], []
@@ -427,8 +430,9 @@ class Transformer(nn.Module):
             inst_idx_to_position_map = get_inst_idx_to_tensor_position_map(active_inst_idx_list)
 
             #-- Decode
+            len_max_seq = 10
             word_probs_list = []
-            for len_dec_seq in range(1, self.opt['max_token_seq_len'] + 1):
+            for len_dec_seq in range(1, len_max_seq + 1):
 
                 active_inst_idx_list, word_prob = beam_decode_step(
                     inst_dec_beams, len_dec_seq, src_seq, src_enc, inst_idx_to_position_map, n_bm, device)
@@ -436,8 +440,8 @@ class Transformer(nn.Module):
                 if not active_inst_idx_list:
                     break  # all instances have finished their path to <EOS>
 
-                #src_seq, src_enc, inst_idx_to_position_map = collate_active_info(
-                #    src_seq, src_enc, inst_idx_to_position_map, active_inst_idx_list, device)
+                src_seq, src_enc, inst_idx_to_position_map = collate_active_info(
+                    src_seq, src_enc, inst_idx_to_position_map, active_inst_idx_list, device)
                 word_probs_list.append(word_prob)
         
         #n_best = 1
