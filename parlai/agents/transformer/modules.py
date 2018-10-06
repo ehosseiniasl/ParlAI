@@ -319,7 +319,7 @@ class Transformer(nn.Module):
 
         return loss, n_correct
 
-    def translate_batch(self, src_seq, src_pos):
+    def translate_batch(self, src_seq, src_pos, max_seq=None):
         ''' Translation work in one batch '''
 
         def get_inst_idx_to_tensor_position_map(inst_idx_list):
@@ -430,7 +430,10 @@ class Transformer(nn.Module):
             inst_idx_to_position_map = get_inst_idx_to_tensor_position_map(active_inst_idx_list)
 
             #-- Decode
-            len_max_seq = 10
+            if max_seq is None:
+                len_max_seq = 10
+            else:
+                len_max_seq = max_seq
             word_probs_list = []
             for len_dec_seq in range(1, len_max_seq + 1):
 
@@ -458,7 +461,7 @@ class Transformer(nn.Module):
         ret = (predictions, scores, cand_preds, seq_logit.view(-1, seq_logit.size(2)))
         return ret
 
-    def evaluate(self, src_seq):
+    def evaluate(self, src_seq, max_seq):
 
         # add position embedding
         src_pos = torch.zeros(src_seq.shape, dtype=torch.int64)
@@ -470,7 +473,7 @@ class Transformer(nn.Module):
         if src_seq.device.type == 'cuda':
             src_pos = src_pos.cuda()
         
-        out = self.translate_batch(src_seq, src_pos)
+        out = self.translate_batch(src_seq, src_pos, max_seq)
         return out
 
 class Ranker(object):

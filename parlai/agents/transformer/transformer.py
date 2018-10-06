@@ -547,8 +547,11 @@ class TransformerAgent(Agent):
             #TODO validate candidates
 
             #ipdb.set_trace()
-
-            out = self.model.evaluate(xs)
+            if ys is not None:
+                max_seq = ys.shape[2]
+            else:
+                max_seq = None
+            out = self.model.evaluate(xs, max_seq)
             # generated response
             _preds, scores, cand_preds, seq_logit_view = out[0], out[1], out[2], out[3]
             predictions = _preds
