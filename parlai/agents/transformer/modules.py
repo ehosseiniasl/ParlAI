@@ -379,7 +379,7 @@ class Transformer(nn.Module):
                 dec_output = dec_output[:, -1, :]  # Pick the last step: (bh * bm) * d_h
                 #ipdb.set_trace()
                 word_prob = F.log_softmax(self.tgt_word_prj(dec_output), dim=1)
-                word_prob_raw = F.softmax(self.tgt_word_prj(dec_output), dim=1)
+                word_prob_raw = self.tgt_word_prj(dec_output)
                 word_prob = word_prob.view(n_active_inst, n_bm, -1)
 
                 return word_prob, word_prob_raw
