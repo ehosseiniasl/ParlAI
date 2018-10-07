@@ -511,11 +511,11 @@ class TransformerAgent(Agent):
             self.zero_grad()
             out = None
             try:
-                out = self.model(xs, ys, rank_during_training=cands is not None)
+                out = self.model(xs, ys[:,:-1], rank_during_training=cands is not None)
                 # generated response
                 _preds, scores, cand_preds, seq_logit_view = out[0], out[1], out[2], out[3]
-                #gold = ys[:, 1:]
-                gold = ys
+                gold = ys[:, 1:]
+                # gold = ys
                 if _preds.shape[1] != gold.shape[1]:
                     ipdb.set_trace()
                 loss, n_correct = self.model.cal_performance(seq_logit_view, gold, smoothing=self.opt['label_smoothing'])
