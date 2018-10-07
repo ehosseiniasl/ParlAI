@@ -548,7 +548,7 @@ class TransformerAgent(Agent):
 
             #ipdb.set_trace()
             if ys is not None:
-                max_seq = ys.shape[2]
+                max_seq = ys.shape[1]
             else:
                 max_seq = None
             out = self.model.evaluate(xs, max_seq)
